@@ -1,0 +1,50 @@
+{
+  "at": "2026-09-26T16:35:37.832Z",
+  "base": "http://localhost:5174",
+  "results": [
+    {
+      "name": "匿名工作区创建与读取",
+      "status": "PASS"
+    },
+    {
+      "name": "无 API 演示问答",
+      "status": "PASS"
+    },
+    {
+      "name": "未配置模型明确回退",
+      "status": "PASS"
+    },
+    {
+      "name": "缺少定位的证据拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "新增证据进入待复核",
+      "status": "PASS"
+    },
+    {
+      "name": "采纳后持久读取并留痕",
+      "status": "PASS"
+    },
+    {
+      "name": "重复复核冲突",
+      "status": "PASS"
+    },
+    {
+      "name": "工作区隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "跨域修改拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "未知来源检查拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "新官方来源与证据保存",
+      "status": "PASS"
+    }
+  ]
+}

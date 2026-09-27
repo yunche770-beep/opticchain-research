@@ -1,0 +1,8 @@
+import { env } from 'cloudflare:workers';
+export function bindings(){return env as unknown as {DB:D1Database;MODEL_API_KEY?:string;MODEL_BASE_URL?:string;MODEL_NAME?:string;MODEL_ACCESS_TOKEN?:string};}
+export function session(req:Request){const token=req.headers.get('cookie')?.match(/(?:^|;\s*)optic_workspace=([a-f0-9-]{36})(?:;|$)/)?.[1];return token||crypto.randomUUID();}
+export function json(req:Request,workspace:string,data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store','Set-Cookie':`optic_workspace=${workspace}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000${new URL(req.url).protocol==='https:'?'; Secure':''}`}});}
+export function sameOrigin(req:Request){const origin=req.headers.get('origin');return !origin||origin===new URL(req.url).origin;}
+export async function body(req:Request){const text=await req.text();if(text.length>16000) throw new Error('请求过大');return JSON.parse(text);}
+export async function limit(db:D1Database,key:string,max=20){const bucket=Math.floor(Date.now()/60000);const r=await db.prepare('INSERT INTO research_rate_limits (key,count) VALUES (?,1) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count').bind(`${key}:${bucket}`).first<{count:number}>();if((r?.count||0)>max) throw new Error('操作过于频繁，请一分钟后重试');}
+export async function record(db:D1Database,workspace:string,kind:string,payload:unknown,status:string){const row={id:crypto.randomUUID(),workspace,kind,payload,status,createdAt:new Date().toISOString()};await db.prepare('INSERT INTO research_records (id,workspace,kind,payload,status,created_at) VALUES (?,?,?,?,?,?)').bind(row.id,workspace,kind,JSON.stringify(payload),status,row.createdAt).run();return row;}

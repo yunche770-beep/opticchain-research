@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import ts from 'typescript';
+await mkdir('work/test-modules',{recursive:true});
+for(const name of ['research-data','engine','source-validation']){const input=await readFile(`lib/${name}.ts`,'utf8');await writeFile(`work/test-modules/${name}.mjs`,ts.transpileModule(input,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replaceAll("'./research-data'","'./research-data.mjs'"));}
+const {scenario,research,validateEvidence,validateModelAnswer}=await import('../work/test-modules/engine.mjs');
+const {validateSource}=await import('../work/test-modules/source-validation.mjs');
+const {companies,sources,stages,comparisons,events}=await import('../work/test-modules/research-data.mjs');
+const tests=[];function test(name,fn){try{fn();tests.push({name,status:'PASS'});}catch(e){tests.push({name,status:'FAIL',error:e.message});}}
+test('公司与来源主键唯一',()=>{assert.equal(new Set(companies.map(c=>c.id)).size,10);assert.equal(new Set(sources.map(s=>s.id)).size,10);});
+test('公司环节与来源无悬空引用',()=>{for(const c of companies){c.stages.forEach(s=>assert(stages.some(t=>t.id===s)));c.sources.forEach(s=>assert(sources.some(t=>t.id===s)));assert(c.limit.length>10);}});
+test('可比与事件有来源和边界',()=>{comparisons.forEach(c=>assert(c.sources.length>0&&c.verdict.length>20));events.forEach(e=>assert(sources.some(s=>s.id===e.source)&&e.boundary.length>20));});
+test('元转亿元复算',()=>{assert.equal(companies[0].metric.value,22885756727.93/1e8);assert.equal(companies[1].metric.value,8591708917.12/1e8);});
+test('分部占比复算',()=>assert(Math.abs(companies[4].metric.share-1410.8/1645*100)<0.001));
+test('零情景等于基准',()=>{const r=scenario(0,50,1,0,0,30);assert.equal(r.revenue,100);assert(Math.abs(r.margin-34.65)<1e-10);});
+test('物料涨价毛利率下降 1.9605 点',()=>assert(Math.abs(scenario(0,50,1,0,10,30).marginChange+1.9605)<1e-10));
+test('资本开支不会等比例映射收入',()=>assert(Math.abs(scenario(10,50,0.8,0,0,30).revenueChange-4)<1e-10));
+test('非法情景参数被拒绝',()=>{assert.throws(()=>scenario(NaN,50,1,0,0,30));assert.throws(()=>scenario(10,150,1,0,0,30));assert.throws(()=>scenario(10,50,1,-100,0,30));});
+test('AI 收入不以模块收入替代',()=>assert(research('中际旭创有多少 AI 收入？').limits.some(s=>s.includes('未单列 AI'))));
+test('公司问答不误路由比较',()=>assert.equal(research('Lumentum 的业务关系').title,'Lumentum的业务关系'));
+test('比较揭示财年和币种差异',()=>{const r=research('中际旭创与 Lumentum 可比吗');assert(r.facts.some(s=>s.includes('财务期间')));assert(r.limits[0].includes('汇率'));});
+test('天孚比较匹配正确',()=>assert(research('天孚与 Coherent 可比吗').title.includes('天孚')));
+test('未知问题不编造',()=>assert.equal(research('咖啡豆价格').sources.length,0));
+test('交易请求守住边界',()=>assert(research('买入哪只保证收益').title.includes('交易问题')));
+const v={companyId:'innolight',sourceId:'S01',level:'revenue',summary:'光模块收入不等于 AI 专属收入',locator:'第26页',period:'2024年度'};
+test('有效证据保留原文定位',()=>assert.equal(validateEvidence(v).locator,'第26页'));
+test('未知来源空摘要无效等级拒绝',()=>{assert.throws(()=>validateEvidence({...v,sourceId:'BAD'}));assert.throws(()=>validateEvidence({...v,summary:''}));assert.throws(()=>validateEvidence({...v,level:'sure'}));});
+const a={title:'t',summary:'s',facts:['f'],inferences:[],limits:[],sources:['S01']};
+test('模型幻觉引用拒绝',()=>assert.throws(()=>validateModelAnswer({...a,sources:['FAKE']})));
+test('模型缺少引用拒绝',()=>assert.throws(()=>validateModelAnswer({...a,sources:[]})));
+test('正确模型结构仍待核验',()=>assert(validateModelAnswer(a).mode.includes('待人工核验')));
+const s={url:'https://static.cninfo.com.cn/test.pdf',title:'测试来源资料',date:'2025-01-01',period:'2024年度',locator:'第1页',summary:'公开官方来源的测试摘要'};
+test('官方 HTTPS 来源可登记',()=>assert(validateSource(s).id.startsWith('U')));
+test('SSRF 私网、外域、伪装域名拒绝',()=>{for(const url of ['http://127.0.0.1/x','https://169.254.169.254','https://evil.com','https://static.cninfo.com.cn.evil.com','https://user:pass@static.cninfo.com.cn/a'])assert.throws(()=>validateSource({...s,url}));});
+test('不存在日期和未来日期拒绝',()=>{assert.throws(()=>validateSource({...s,date:'2025-02-31'}));assert.throws(()=>validateSource({...s,date:'2099-01-01'}));});
+await writeFile('docs/core-test-results.json',JSON.stringify({at:new Date().toISOString(),tests},null,2));tests.forEach(t=>console.log(t.status+' '+t.name));if(tests.some(t=>t.status==='FAIL'))process.exitCode=1;

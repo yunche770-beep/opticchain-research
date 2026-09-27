@@ -1,0 +1,97 @@
+{
+  "at": "2026-09-26T16:34:57.250Z",
+  "tests": [
+    {
+      "name": "公司与来源主键唯一",
+      "status": "PASS"
+    },
+    {
+      "name": "公司环节与来源无悬空引用",
+      "status": "PASS"
+    },
+    {
+      "name": "可比与事件有来源和边界",
+      "status": "PASS"
+    },
+    {
+      "name": "元转亿元复算",
+      "status": "PASS"
+    },
+    {
+      "name": "分部占比复算",
+      "status": "PASS"
+    },
+    {
+      "name": "零情景等于基准",
+      "status": "PASS"
+    },
+    {
+      "name": "物料涨价毛利率下降 1.9605 点",
+      "status": "PASS"
+    },
+    {
+      "name": "资本开支不会等比例映射收入",
+      "status": "PASS"
+    },
+    {
+      "name": "非法情景参数被拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "AI 收入不以模块收入替代",
+      "status": "PASS"
+    },
+    {
+      "name": "公司问答不误路由比较",
+      "status": "PASS"
+    },
+    {
+      "name": "比较揭示财年和币种差异",
+      "status": "PASS"
+    },
+    {
+      "name": "天孚比较匹配正确",
+      "status": "PASS"
+    },
+    {
+      "name": "未知问题不编造",
+      "status": "PASS"
+    },
+    {
+      "name": "交易请求守住边界",
+      "status": "PASS"
+    },
+    {
+      "name": "有效证据保留原文定位",
+      "status": "PASS"
+    },
+    {
+      "name": "未知来源空摘要无效等级拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "模型幻觉引用拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "模型缺少引用拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "正确模型结构仍待核验",
+      "status": "PASS"
+    },
+    {
+      "name": "官方 HTTPS 来源可登记",
+      "status": "PASS"
+    },
+    {
+      "name": "SSRF 私网、外域、伪装域名拒绝",
+      "status": "PASS"
+    },
+    {
+      "name": "不存在日期和未来日期拒绝",
+      "status": "PASS"
+    }
+  ]
+}
